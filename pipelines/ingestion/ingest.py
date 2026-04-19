@@ -5,7 +5,6 @@ from shared.db.database import AsyncSessionLocal
 from shared.locations import LOCATIONS
 
 WEATHER_API_KEY = settings.weather_api_key
-ZIPCODE = settings.zipcode
 
 async def fetch_weather(location: str) -> dict:
     url = "https://api.weatherapi.com/v1/current.json"
