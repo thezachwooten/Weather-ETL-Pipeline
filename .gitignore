@@ -1,2 +1,12 @@
+
+
+# Python
+__pycache__/
 .env
 ./venv
+
+# Airflow
+logs/
+airflow.cfg
+webserver_config.py
+unittests.cfg
