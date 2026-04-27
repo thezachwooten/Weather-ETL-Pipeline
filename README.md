@@ -102,3 +102,15 @@ The scheduler will start, create the database tables on first run, and begin the
 # Coming Soon
 * Scalable Transformation: Migrating from standard Python to PySpark to enable distributed data processing, ensuring the pipeline can handle high-velocity environmental data beyond local memory limits. 
 * Enterprise Orchestration: Transitioning from APScheduler to Apache Airflow (running via Docker) to manage task dependencies, improve error handling, and provide a centralized UI for pipeline monitoring.
+
+# Soon-to-be file structure
+Weather-ETL-Pipeline/
+├── dags/
+│   └── weather_etl_dag.py    # The Airflow schedule and task definitions
+├── scripts/
+│   ├── ingest.py             # existing HTTPX logic
+│   ├── transform_spark.py    # NEW: PySpark cleaning logic
+│   └── aggregate_spark.py    # NEW: PySpark rolling average logic
+├── docker/
+│   ├── airflow.Dockerfile    # Custom image to include PySpark/Dependencies
+│   └── docker-compose.yaml   # Spins up Airflow, Postgres, and Spark Worker
