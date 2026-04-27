@@ -13,30 +13,65 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  airflow-scheduler:
-    build: ./docker  # Points to the folder containing your Dockerfile
+  airflow-init:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
     depends_on:
       - db
     environment:
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://WeatherETL:WeatherETL@db:5432/WeatherETL
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__CORE__AUTH_MANAGER=airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__API_AUTH__JWT_SECRET=this-is-a-very-long-secret-key-that-is-at-least-64-bytes-long-ok
+      - AIRFLOW__API__SECRET_KEY=supersecretapikeythisalsoneedschanging
+      - PYTHONPATH=/opt/airflow
     volumes:
-      - ./dags:/opt/airflow/dags        # Simple relative path from root
-      - ./scripts:/opt/airflow/scripts  # Simple relative path from root
-    command: scheduler
+      - .:/opt/airflow
+    command: bash -c "airflow db migrate && airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com"
+    restart: on-failure
 
-  airflow-webserver:
-    build: ./docker
+  airflow-scheduler:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
     depends_on:
       - db
+      - airflow-init
+    environment:
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://WeatherETL:WeatherETL@db:5432/WeatherETL
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__CORE__AUTH_MANAGER=airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__API_AUTH__JWT_SECRET=this-is-a-very-long-secret-key-that-is-at-least-64-bytes-long-ok
+      - AIRFLOW__API__SECRET_KEY=supersecretapikeythisalsoneedschanging
+      - PYTHONPATH=/opt/airflow
+    volumes:
+      - .:/opt/airflow
+    command: scheduler
+
+  # "webserver" is now "api-server" in Airflow 3.x
+  airflow-api-server:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    depends_on:
+      - db
+      - airflow-init
     ports:
       - "8080:8080"
     environment:
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://WeatherETL:WeatherETL@db:5432/WeatherETL
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__CORE__AUTH_MANAGER=airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
       - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__API_AUTH__JWT_SECRET=this-is-a-very-long-secret-key-that-is-at-least-64-bytes-long-ok
+      - AIRFLOW__API__SECRET_KEY=supersecretapikeythisalsoneedschanging
+      - PYTHONPATH=/opt/airflow
     volumes:
-      - ./dags:/opt/airflow/dags
-    command: webserver
+      - .:/opt/airflow
+    command: api-server
 
 volumes:
   postgres_data:
