@@ -112,5 +112,5 @@ Weather-ETL-Pipeline/
 │   ├── transform_spark.py    # NEW: PySpark cleaning logic
 │   └── aggregate_spark.py    # NEW: PySpark rolling average logic
 ├── docker/
-│   ├── airflow.Dockerfile    # Custom image to include PySpark/Dependencies
+│   ├── Dockerfile    # Custom image to include PySpark/Dependencies
 │   └── docker-compose.yaml   # Spins up Airflow, Postgres, and Spark Worker
