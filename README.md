@@ -98,3 +98,7 @@ The scheduler will start, create the database tables on first run, and begin the
 | Ingestion | Every 30 minutes |
 | Processing | Every 35 minutes |
 | Aggregation | Daily at midnight |
+
+# Coming Soon
+* Scalable Transformation: Migrating from standard Python to PySpark to enable distributed data processing, ensuring the pipeline can handle high-velocity environmental data beyond local memory limits. 
+* Enterprise Orchestration: Transitioning from APScheduler to Apache Airflow (running via Docker) to manage task dependencies, improve error handling, and provide a centralized UI for pipeline monitoring.
