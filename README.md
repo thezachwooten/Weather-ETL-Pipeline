@@ -10,29 +10,35 @@ A 3-stage asynchronous ETL pipeline that ingests live weather data across 40+ So
 
 ## Tech Stack
 
-- **Python** — AsyncIO, HTTPX, APScheduler
-- **FastAPI** — application entry point
+- **Python** — AsyncIO, HTTPX, PySpark
+- **Airflow** — Overall orchestration of system. Handles scheduling, a graceful UI, and retries.
 - **SQLAlchemy** — async ORM with PostgreSQL
 - **PostgreSQL** — raw, clean, and aggregated weather tables
-- **Docker** — containerized Postgres instance via Docker Compose
+- **Docker** — containerized Postgres and Airflow 3.x running a PySpark instance via Docker Compose
 
 ## Project Structure
 
 ```
 Weather-ETL-Pipeline/
-├── pipelines/
-│   ├── ingestion/        # fetches from WeatherAPI and stores raw payloads
-│   ├── processing/       # cleans raw data into normalized rows
-│   └── aggregation/      # calculates 3-day rolling averages
+├── dags/
+│   └── weather_cleaning.py        # DAG for cleaning the raw weather data
+│   └── weather_ingestion.py       # DAG for ingesting raw weather data
+├── scripts/
+│   ├── ingest_weather.py          # existing HTTPX logic
+│   ├── transform_weather.py       # PySpark cleaning logic
+│   └── aggregate_spark.py         # PySpark rolling average logic
+├── docker/
+│   ├── Dockerfile                 # Custom image to include PySpark/Dependencies
+│   └── docker-compose.yaml        # Spins up Airflow, Postgres, and Spark Worker
 ├── shared/
 │   ├── db/
-│   │   ├── models.py     # SQLAlchemy table definitions
-│   │   ├── crud.py       # all database reads and writes
-│   │   └── database.py   # async engine and session setup
-│   ├── config.py         # environment variable loading
-│   └── locations.py      # list of zip codes to track
-├── main.py               # scheduler setup and app entry point
-├── docker-compose.yml
+│   │   ├── models.py              # SQLAlchemy table definitions
+│   │   ├── crud.py                # all database reads and writes
+│   │   └── database.py            # async engine and session setup
+│   ├── config.py                  # environment variable loading
+│   └── locations.py               # list of zip codes to track
+├── main.py                        # scheduler setup and app entry point
+├── docker-compose.yml             # root-level compose file for local dev
 ├── .env.example
 └── requirements.txt
 ```
@@ -52,22 +58,26 @@ cd Weather-ETL-Pipeline
 cp .env.example .env
 ```
 
+> **Note:** Place your `.env` file inside the `shared/` folder before running the pipeline.
+
 Fill in your `.env`:
 
 ```
-DATABASE_URL=postgresql+asyncpg://user:password@localhost:5435/WeatherETL
+DATABASE_URL=postgresql+asyncpg://WeatherETL:WeatherETL@db:5432/WeatherETL
 WEATHER_API_KEY=your_weatherapi_key
 ```
 
 Get a free API key at [weatherapi.com](https://www.weatherapi.com)
 
-### 3. Start the database
+### 3. Build and start the containers
 
 ```bash
-docker-compose up -d
+docker-compose up --build
 ```
 
-### 4. Install dependencies
+> **Tip:** It's recommended to run without the `-d` (detached) flag on your first run so you can confirm all containers start correctly. The schedulers and DAGs initialize after the API server is ready, so watching the logs helps catch any startup issues early.
+
+### 4. Install dependencies (optional — code runs inside Docker containers)
 
 ```bash
 python -m venv venv
@@ -75,13 +85,7 @@ source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 5. Run the pipeline
-
-```bash
-python main.py
-```
-
-The scheduler will start, create the database tables on first run, and begin the ingestion cycle automatically.
+Log into the Airflow UI with the default credentials (Admin / Admin), select the DAGs, and start them to begin the schedule.
 
 ## Database Schema
 
@@ -96,21 +100,10 @@ The scheduler will start, create the database tables on first run, and begin the
 | Pipeline | Frequency |
 |----------|-----------|
 | Ingestion | Every 30 minutes |
-| Processing | Every 35 minutes |
+| Processing | Every 35 minutes (intentional 5-minute offset gives ingestion time to complete before processing begins) |
 | Aggregation | Daily at midnight |
 
-# Coming Soon
-* Scalable Transformation: Migrating from standard Python to PySpark to enable distributed data processing, ensuring the pipeline can handle high-velocity environmental data beyond local memory limits. 
-* Enterprise Orchestration: Transitioning from APScheduler to Apache Airflow (running via Docker) to manage task dependencies, improve error handling, and provide a centralized UI for pipeline monitoring.
+## Recently Added
 
-# Soon-to-be file structure
-Weather-ETL-Pipeline/
-├── dags/
-│   └── weather_etl_dag.py    # The Airflow schedule and task definitions
-├── scripts/
-│   ├── ingest.py             # existing HTTPX logic
-│   ├── transform_spark.py    # NEW: PySpark cleaning logic
-│   └── aggregate_spark.py    # NEW: PySpark rolling average logic
-├── docker/
-│   ├── Dockerfile    # Custom image to include PySpark/Dependencies
-│   └── docker-compose.yaml   # Spins up Airflow, Postgres, and Spark Worker
+- **Scalable Transformation** — Migrated from standard Python to PySpark to enable distributed data processing, ensuring the pipeline can handle high-velocity environmental data beyond local memory limits.
+- **Enterprise Orchestration** — Transitioned from APScheduler to Apache Airflow (running via Docker) to manage task dependencies, improve error handling, and provide a centralized UI for pipeline monitoring.
