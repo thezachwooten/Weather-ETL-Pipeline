@@ -7,7 +7,7 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN curl -L https://jdbc.postgresql.org/download/postgresql-42.7.2.jar -o /opt/airflow/postgresql-42.7.2.jar
+RUN curl -L https://jdbc.postgresql.org/download/postgresql-42.7.2.jar -o /opt/postgresql-42.7.2.jar
 
 ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
 
