@@ -8,7 +8,7 @@ BASE_DIR = Path(__file__).parent
 
 
 class Settings(BaseSettings):
-    database_url: str = "ostgresql+asyncpg://WeatherETL:WeatherETL@db:5432/WeatherETL"
+    database_url: str = "postgresql+asyncpg://WeatherETL:WeatherETL@db:5432/WeatherETL"
     weather_api_key: str =""
 
     model_config = SettingsConfigDict(env_file=BASE_DIR / ".env", env_file_encoding="utf-8")

@@ -14,4 +14,4 @@ ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
 USER airflow
 
 # FAB auth manager is now a separate package in Airflow 3.x
-RUN pip install pyspark httpx psycopg2-binary apache-airflow-providers-fab
+RUN pip install "sqlalchemy>=2.0" pyspark httpx psycopg2-binary asyncpg apache-airflow-providers-fab apache-airflow-providers-standard

@@ -1,9 +1,8 @@
 from airflow import DAG
-from airflow.operators.python import PythonOperator
+from airflow.providers.standard.operators.python import PythonOperator
 from datetime import datetime, timedelta
 import asyncio
 import sys
-import os
 
 # 1. Add the project root to the path so Airflow can find your 'scripts' and 'shared' folders
 sys.path.append('/opt/airflow')
@@ -26,9 +25,9 @@ with DAG(
         'retry_delay': timedelta(minutes=5),
     },
     description='Fetches raw weather data for SC locations and stores in Bronze layer',
-    schedule='*/30 * * * *', # Runs every 30 minutes
+    schedule='*/30 * * * *',
     start_date=datetime(2026, 4, 27),
-    catchup=False, # Don't try to run for all the 30-min slots in the past
+    catchup=False,
     tags=['weather', 'ingestion'],
 ) as dag:
 
